@@ -45,11 +45,37 @@ azul), 4 resistencias de 220Ω, protoboard, cables.
 2. Selecciona tu placa y puerto.
 3. Sube el sketch. No necesitas librerías extra.
 
-## 3. Levantar el servidor
+## 3. Instalar dependencias y levantar el servidor
+
+Este proyecto usa **Node.js**. Antes de correrlo, necesitas instalar las
+dependencias que usa `server.js` (Express, WebSocket, SerialPort) — están
+declaradas en `package.json`, pero no en el repositorio (la carpeta
+`node_modules/` está en `.gitignore` a propósito, porque puede tener miles
+de archivos y se regenera fácilmente).
 
 ```bash
 cd server
 npm install
+```
+
+Esto crea automáticamente la carpeta `node_modules/` con todo lo necesario.
+Es normal que este paso tarde unos segundos y que solo tengas que
+ejecutarlo **una vez** (o cada vez que clones el proyecto en un computador
+nuevo).
+
+Si ves un warning de `install-scripts` mencionando
+`@serialport/bindings-cpp`, corre:
+
+```bash
+npm install-scripts approve @serialport/bindings-cpp
+npm install
+```
+
+Esto es necesario para que la conexión con el Arduino por USB funcione.
+
+Luego levanta el servidor:
+
+```bash
 node server.js
 ```
 
@@ -84,5 +110,5 @@ Luego abre **http://localhost:3000** en el navegador.
   compilación nativa).
 - **No depende de internet**: los sonidos se generan localmente con Web
   Audio API y las fuentes (`Press Start 2P`, `IBM Plex Mono`) están
-  auto-hospedadas en `public/fonts/`. Útil si el wifi de la universidad
+  auto-hospedadas en `public/fonts/`. Útil si el wifi de la Universidad
   falla justo durante la presentación.
