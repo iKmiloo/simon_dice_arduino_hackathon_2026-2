@@ -62,16 +62,6 @@ Es normal que este paso tarde unos segundos y que solo tengas que
 ejecutarlo **una vez** (o cada vez que clones el proyecto en un computador
 nuevo).
 
-Si ves un warning de `install-scripts` mencionando
-`@serialport/bindings-cpp`, corre:
-
-```bash
-npm install-scripts approve @serialport/bindings-cpp
-npm install
-```
-
-Esto es necesario para que la conexión con el Arduino por USB funcione.
-
 Luego levanta el servidor:
 
 ```bash
