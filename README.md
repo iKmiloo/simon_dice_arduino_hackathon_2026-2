@@ -17,7 +17,6 @@ simon-hackathon/
     ├── leaderboard.json       -> se crea solo al guardar el primer puntaje
     └── public/
         ├── index.html         -> interfaz del juego (frontend)
-        └── fonts/             -> tipografías auto-hospedadas (sin internet)
 ```
 
 ## 1. Armar el circuito
@@ -109,12 +108,4 @@ Luego abre **http://localhost:3000** en el navegador.
   solo al guardar el primer puntaje — no requiere ninguna base de datos ni
   compilación nativa).
 - **No depende de internet**: los sonidos se generan localmente con Web
-  Audio API y las fuentes (`Press Start 2P`, `IBM Plex Mono`) están
-  auto-hospedadas en `public/fonts/`. Útil si el wifi de la universidad
-  falla justo durante la presentación.
-
-## Próximos pasos posibles (si te sobra tiempo)
-
-- Velocidad de la secuencia que aumenta con el nivel (dificultad progresiva).
-- Modo "manga" (secuencia inversa) a partir de cierto nivel.
-- Pantalla de "top 3 del día" en un modo espectador.
+  Audio API.
