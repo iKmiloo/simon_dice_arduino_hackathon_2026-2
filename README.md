@@ -16,7 +16,7 @@ simon-hackathon/
     ├── package.json
     ├── leaderboard.json       -> se crea solo al guardar el primer puntaje
     └── public/
-        ├── index.html         -> interfaz del juego (frontend)
+        └── index.html         -> interfaz del juego (frontend)
 ```
 
 ## 1. Armar el circuito
