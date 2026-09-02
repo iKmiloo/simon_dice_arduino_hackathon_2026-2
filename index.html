@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIMÓN // circuito</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%230a1710'/%3E%3Cpath d='M32 6 A26 26 0 0 1 58 32 L32 32 Z' fill='%23ff4d4d'/%3E%3Cpath d='M58 32 A26 26 0 0 1 32 58 L32 32 Z' fill='%233ddc84'/%3E%3Cpath d='M32 58 A26 26 0 0 1 6 32 L32 32 Z' fill='%23ffd23d'/%3E%3Cpath d='M6 32 A26 26 0 0 1 32 6 L32 32 Z' fill='%234d9bff'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%230a1710'/%3E%3C/svg%3E">
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('fonts/press-start-2p-latin-400-normal.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    src: url('fonts/ibm-plex-mono-latin-400-normal.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    src: url('fonts/ibm-plex-mono-latin-500-normal.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'IBM Plex Mono';
+    src: url('fonts/ibm-plex-mono-latin-600-normal.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  :root {
+    --pcb-bg: #0a1710;
+    --pcb-bg-2: #0f2118;
+    --copper: #c8a35a;
+    --copper-dim: #6b5a35;
+    --silk: #dce8de;
+    --silk-dim: #7d9186;
+    --red: #ff4d4d;
+    --green: #3ddc84;
+    --blue: #4d9bff;
+    --yellow: #ffd23d;
+    --danger: #ff4d4d;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(61,220,132,0.06), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(77,155,255,0.06), transparent 40%),
+      var(--pcb-bg);
+    color: var(--silk);
+    font-family: 'IBM Plex Mono', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 64px;
+  }
+
+  /* trazas de circuito como fondo decorativo */
+  .traces {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.35;
+    z-index: 0;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+    z-index: 1;
+  }
+
+  h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(20px, 4vw, 32px);
+    letter-spacing: 2px;
+    color: var(--silk);
+    margin: 0 0 8px;
+    text-shadow: 0 0 12px rgba(61,220,132,0.35);
+  }
+
+  h1 span { color: var(--copper); }
+
+  .subtitle {
+    color: var(--silk-dim);
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 4px 10px;
+    border: 1px solid var(--copper-dim);
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--silk-dim);
+  }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--danger);
+    box-shadow: 0 0 6px var(--danger);
+  }
+  .status-dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+  main {
+    z-index: 1;
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    max-width: 900px;
+  }
+
+  .board-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .hud {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    font-size: 13px;
+    color: var(--silk-dim);
+  }
+
+  .hud .level-value {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 26px;
+    color: var(--copper);
+    text-shadow: 0 0 10px rgba(200,163,90,0.4);
+  }
+
+  .board {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: var(--pcb-bg-2);
+    border: 6px solid #1b2e21;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.6), 0 0 40px rgba(0,0,0,0.4);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 6px;
+    padding: 6px;
+  }
+
+  .pad {
+    border: none;
+    cursor: pointer;
+    opacity: 0.35;
+    transition: opacity 0.08s ease, transform 0.08s ease;
+    filter: saturate(0.7);
+  }
+  .pad:active { transform: scale(0.97); }
+  .pad.lit { opacity: 1; filter: saturate(1.3) brightness(1.15); }
+  .pad:disabled { cursor: default; }
+
+  .pad-red    { background: var(--red);    border-radius: 100% 0 0 0; box-shadow: 0 0 0 rgba(255,77,77,0); }
+  .pad-green  { background: var(--green);  border-radius: 0 100% 0 0; }
+  .pad-yellow { background: var(--yellow); border-radius: 0 0 0 100%; }
+  .pad-blue   { background: var(--blue);   border-radius: 0 0 100% 0; }
+
+  .pad-red.lit    { box-shadow: 0 0 35px 10px rgba(255,77,77,0.7); }
+  .pad-green.lit  { box-shadow: 0 0 35px 10px rgba(61,220,132,0.7); }
+  .pad-yellow.lit { box-shadow: 0 0 35px 10px rgba(255,210,61,0.7); }
+  .pad-blue.lit   { box-shadow: 0 0 35px 10px rgba(77,155,255,0.7); }
+
+  .center-cap {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 92px; height: 92px;
+    border-radius: 50%;
+    background: var(--pcb-bg);
+    border: 4px solid #1b2e21;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    color: var(--copper);
+    text-align: center;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  button.action {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    background: transparent;
+    color: var(--copper);
+    border: 1px solid var(--copper);
+    padding: 10px 22px;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    font-size: 13px;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  button.action:hover { background: var(--copper); color: var(--pcb-bg); }
+  button.action:disabled { opacity: 0.4; cursor: default; background: transparent; color: var(--copper); }
+
+  .message {
+    min-height: 18px;
+    font-size: 12px;
+    color: var(--silk-dim);
+    text-align: center;
+  }
+  .message.fail { color: var(--red); }
+  .message.win { color: var(--green); }
+
+  .hint {
+    font-size: 11px;
+    color: var(--silk-dim);
+    text-align: center;
+    max-width: 280px;
+    line-height: 1.6;
+  }
+  .hint kbd {
+    border: 1px solid var(--copper-dim);
+    border-radius: 3px;
+    padding: 1px 5px;
+    color: var(--copper);
+  }
+
+  /* ---- panel lateral: nombre + leaderboard ---- */
+  .side-panel {
+    width: 260px;
+    background: rgba(15,33,24,0.5);
+    border: 1px solid var(--copper-dim);
+    border-radius: 10px;
+    padding: 18px;
+  }
+
+  .side-panel h2 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: var(--copper);
+    margin: 0 0 14px;
+    letter-spacing: 1px;
+  }
+
+  .name-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  input[type="text"] {
+    flex: 1;
+    background: var(--pcb-bg);
+    border: 1px solid var(--copper-dim);
+    color: var(--silk);
+    padding: 8px 10px;
+    border-radius: 5px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+  }
+  input[type="text"]:focus { outline: 1px solid var(--copper); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th {
+    text-align: left;
+    color: var(--silk-dim);
+    font-weight: 500;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--copper-dim);
+  }
+  tbody td { padding: 6px 0; border-bottom: 1px solid rgba(200,163,90,0.08); }
+  tbody tr:first-child td { color: var(--copper); }
+  .rank-col { color: var(--silk-dim); width: 24px; }
+  .level-col { text-align: right; color: var(--green); }
+  .action-col { width: 26px; text-align: right; }
+
+  .delete-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--silk-dim);
+    width: 20px;
+    height: 20px;
+    line-height: 1;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0.35;
+    transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  tbody tr:hover .delete-btn { opacity: 0.9; }
+  .delete-btn:hover {
+    color: var(--red);
+    border-color: var(--red);
+    opacity: 1;
+  }
+  .delete-btn:disabled { opacity: 0.2; cursor: default; }
+
+  .empty-row td { color: var(--silk-dim); text-align: center; padding: 14px 0; }
+
+  @media (max-width: 620px) {
+    main { flex-direction: column; align-items: center; }
+    .side-panel { width: 100%; max-width: 300px; }
+  }
+</style>
+</head>
+<body>
+
+<svg class="traces" viewBox="0 0 1000 600" preserveAspectRatio="none">
+  <g stroke="#3ddc84" stroke-width="1" fill="none">
+    <path d="M0,80 H200 L240,120 H480" />
+    <path d="M1000,60 H820 L780,100 H600" />
+    <path d="M0,520 H180 L220,480 H420" />
+    <path d="M1000,540 H840 L800,500 H640" />
+  </g>
+  <g fill="#3ddc84">
+    <circle cx="480" cy="120" r="3" />
+    <circle cx="600" cy="100" r="3" />
+    <circle cx="420" cy="480" r="3" />
+    <circle cx="640" cy="500" r="3" />
+  </g>
+</svg>
+
+<header>
+  <h1>SIMÓN<span>::</span>DICE</h1>
+  <div class="subtitle">circuito físico + interfaz web</div>
+  <div class="status-pill"><span class="status-dot" id="statusDot"></span><span id="statusText">arduino desconectado</span></div>
+</header>
+
+<main>
+  <section class="board-panel">
+    <div class="hud">
+      <div>NIVEL<br><span class="level-value" id="levelValue">0</span></div>
+      <button class="action" id="startBtn">INICIAR</button>
+    </div>
+
+    <div class="board">
+      <button class="pad pad-red" data-color="0" disabled></button>
+      <button class="pad pad-green" data-color="1" disabled></button>
+      <button class="pad pad-yellow" data-color="2" disabled></button>
+      <button class="pad pad-blue" data-color="3" disabled></button>
+      <div class="center-cap">SIMÓN</div>
+    </div>
+
+    <div class="message" id="message">presiona iniciar para comenzar</div>
+    <div class="hint">Puedes jugar con el circuito físico (botones) o haciendo clic directamente en cada color del tablero.</div>
+  </section>
+
+  <aside class="side-panel">
+    <h2>RANKING</h2>
+    <div class="name-row">
+      <input type="text" id="nameInput" placeholder="tu nombre" maxlength="20">
+    </div>
+    <table>
+      <thead>
+        <tr><th class="rank-col">#</th><th>Jugador</th><th class="level-col">Nivel</th><th class="action-col"></th></tr>
+      </thead>
+      <tbody id="leaderboardBody">
+        <tr class="empty-row"><td colspan="3">cargando...</td></tr>
+      </tbody>
+    </table>
+  </aside>
+</main>
+
+<script>
+(function () {
+  const COLORS = ['red', 'green', 'yellow', 'blue'];
+  const pads = Array.from(document.querySelectorAll('.pad'));
+  const levelValue = document.getElementById('levelValue');
+  const startBtn = document.getElementById('startBtn');
+  const messageEl = document.getElementById('message');
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const nameInput = document.getElementById('nameInput');
+  const leaderboardBody = document.getElementById('leaderboardBody');
+
+  let sequence = [];
+  let playerStep = 0;
+  let level = 0;
+  let acceptingInput = false;
+  let playing = false;
+
+  const savedName = localStorage.getItem('simon_name');
+  if (savedName) nameInput.value = savedName;
+  nameInput.addEventListener('change', () => localStorage.setItem('simon_name', nameInput.value.trim()));
+
+  // ---------- WebSocket ----------
+  const ws = new WebSocket(`ws://${location.host}`);
+
+  ws.addEventListener('message', (event) => {
+    const data = JSON.parse(event.data);
+    if (data.type === 'status') {
+      setConnected(data.connected);
+    } else if (data.type === 'button') {
+      handleInput(data.index);
+    }
+  });
+
+  ws.addEventListener('open', () => {});
+  ws.addEventListener('close', () => setConnected(false));
+
+  function setConnected(connected) {
+    statusDot.classList.toggle('on', connected);
+    statusText.textContent = connected ? 'arduino conectado' : 'arduino desconectado (usa el teclado)';
+  }
+
+  function sendLed(index, on) {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'led', index, on }));
+    }
+  }
+
+  // ---------- Mouse: clic en cada color ----------
+  pads.forEach((pad, idx) => {
+    pad.addEventListener('click', () => handleInput(idx));
+  });
+
+  // ---------- Sonido ----------
+  // Un tono por color (estilo Simón clásico), generado con Web Audio API:
+  // no depende de archivos externos, así que no hay riesgo de que falte
+  // un asset el día de la demo.
+  let audioCtx = null;
+  const TONE_FREQUENCIES = [329.63, 392.0, 523.25, 440.0]; // rojo, verde, amarillo, azul
+
+  function getAudioCtx() {
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContextClass();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function playTone(index, durationMs = 300) {
+    try {
+      const ctx = getAudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = TONE_FREQUENCIES[index] || 440;
+
+      const now = ctx.currentTime;
+      const durationSec = durationMs / 1000;
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.25, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + durationSec + 0.03);
+    } catch (e) {
+      // si el navegador bloquea audio (sin interacción previa del usuario), lo ignoramos
+    }
+  }
+
+  // ---------- Lógica del juego ----------
+  function litPad(index, duration = 450) {
+    return new Promise((resolve) => {
+      const pad = pads[index];
+      pad.classList.add('lit');
+      sendLed(index, true);
+      playTone(index, duration);
+      setTimeout(() => {
+        pad.classList.remove('lit');
+        sendLed(index, false);
+        setTimeout(resolve, 140);
+      }, duration);
+    });
+  }
+
+  async function playSequence() {
+    acceptingInput = false;
+    setPadsEnabled(false);
+    setMessage('memoriza la secuencia...', '');
+    await sleep(400);
+    for (const idx of sequence) {
+      await litPad(idx);
+    }
+    playerStep = 0;
+    acceptingInput = true;
+    setPadsEnabled(true);
+    setMessage('tu turno', '');
+  }
+
+  function setPadsEnabled(enabled) {
+    pads.forEach(p => p.disabled = !enabled);
+  }
+
+  function setMessage(text, cls) {
+    messageEl.textContent = text;
+    messageEl.className = 'message' + (cls ? ' ' + cls : '');
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function nextRound() {
+    sequence.push(Math.floor(Math.random() * 4));
+    level++;
+    levelValue.textContent = level;
+    playSequence();
+  }
+
+  async function handleInput(index) {
+    if (!acceptingInput) return;
+    if (index < 0 || index > 3) return;
+
+    // feedback visual e inmediato al presionar
+    pads[index].classList.add('lit');
+    sendLed(index, true);
+    playTone(index, 200);
+    setTimeout(() => { pads[index].classList.remove('lit'); sendLed(index, false); }, 200);
+
+    if (index === sequence[playerStep]) {
+      playerStep++;
+      if (playerStep === sequence.length) {
+        acceptingInput = false;
+        setMessage('¡bien! siguiente nivel...', 'win');
+        await sleep(700);
+        nextRound();
+      }
+    } else {
+      acceptingInput = false;
+      setPadsEnabled(false);
+      setMessage(`fallaste en el nivel ${level}`, 'fail');
+      playing = false;
+      nameInput.disabled = false;
+      startBtn.disabled = false;
+      startBtn.textContent = 'JUGAR DE NUEVO';
+      await submitScore(level);
+      await loadLeaderboard();
+    }
+  }
+
+  function startGame() {
+    if (playing) return;
+
+    getAudioCtx(); // desbloquea el audio dentro del mismo clic del usuario
+
+    const name = nameInput.value.trim();
+    if (!name) {
+      setMessage('escribe tu nombre para poder jugar', 'fail');
+      nameInput.focus();
+      return;
+    }
+    localStorage.setItem('simon_name', name);
+
+    playing = true;
+    sequence = [];
+    level = 0;
+    levelValue.textContent = level;
+    startBtn.disabled = true;
+    startBtn.textContent = 'INICIAR';
+    nameInput.disabled = true;
+    nextRound();
+  }
+
+  startBtn.addEventListener('click', startGame);
+
+  // habilitar/deshabilitar el botón según si hay nombre escrito
+  function refreshStartAvailability() {
+    if (playing) return;
+    startBtn.disabled = nameInput.value.trim().length === 0;
+  }
+  nameInput.addEventListener('input', refreshStartAvailability);
+  refreshStartAvailability();
+
+  // ---------- Leaderboard ----------
+  async function submitScore(finalLevel) {
+    const name = (nameInput.value || '').trim() || 'Anónimo';
+    try {
+      await fetch('/api/score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, level: finalLevel })
+      });
+    } catch (e) { /* silencioso: no bloquea el juego */ }
+  }
+
+  async function loadLeaderboard() {
+    try {
+      const res = await fetch('/api/leaderboard');
+      const rows = await res.json();
+      if (!rows.length) {
+        leaderboardBody.innerHTML = '<tr class="empty-row"><td colspan="4">aún nadie ha jugado</td></tr>';
+        return;
+      }
+      leaderboardBody.innerHTML = rows.map((r, i) => `
+        <tr>
+          <td class="rank-col">${i + 1}</td>
+          <td>${escapeHtml(r.name)}</td>
+          <td class="level-col">${r.level}</td>
+          <td class="action-col">
+            <button class="delete-btn" data-id="${escapeHtml(r.id)}" title="Borrar este registro" aria-label="Borrar registro de ${escapeHtml(r.name)}">×</button>
+          </td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      leaderboardBody.innerHTML = '<tr class="empty-row"><td colspan="4">no se pudo cargar</td></tr>';
+    }
+  }
+
+  leaderboardBody.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.delete-btn');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const row = btn.closest('tr');
+    const name = row.children[1]?.textContent || 'este registro';
+
+    if (!confirm(`¿Borrar el puntaje de "${name}"? Esta acción no se puede deshacer.`)) return;
+
+    btn.disabled = true;
+    try {
+      const res = await fetch(`/api/score/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('delete failed');
+      await loadLeaderboard();
+    } catch (err) {
+      btn.disabled = false;
+      alert('No se pudo borrar el registro. Intenta de nuevo.');
+    }
+  });
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  loadLeaderboard();
+})();
+</script>
+
+</body>
+</html>
