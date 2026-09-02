@@ -1,5 +1,5 @@
 /*
-  Servidor Simón Dice
+  Servidor Juego de Memoria con Arduino
   --------------------
   1. Abre el puerto serial del Arduino y escucha eventos "BTN:n"
   2. Reenvía esos eventos a todos los navegadores conectados vía WebSocket
@@ -32,12 +32,27 @@ const HTTP_PORT = 3000;
 const LEADERBOARD_PATH = path.join(__dirname, 'leaderboard.json');
 
 function loadScores() {
+  let scores;
   try {
     const raw = fs.readFileSync(LEADERBOARD_PATH, 'utf-8');
-    return JSON.parse(raw);
+    scores = JSON.parse(raw);
   } catch (e) {
     return []; // el archivo aún no existe o está vacío/corrupto
   }
+
+  // Migración: registros guardados antes de tener "id" (versión anterior)
+  // no se pueden borrar individualmente. Les asignamos uno y lo persistimos.
+  let needsMigration = false;
+  scores = scores.map(s => {
+    if (!s.id) {
+      needsMigration = true;
+      return { ...s, id: generateId() };
+    }
+    return s;
+  });
+  if (needsMigration) saveScores(scores);
+
+  return scores;
 }
 
 function generateId() {

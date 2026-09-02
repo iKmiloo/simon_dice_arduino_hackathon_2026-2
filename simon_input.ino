@@ -1,5 +1,5 @@
 /*
-  Simón Dice - Firmware de entrada (Arduino Uno/Nano)
+  Juego de Memoria con Arduino - Firmware de entrada (Arduino Uno/Nano)
   ----------------------------------------------------
   Rol: dispositivo de ENTRADA. Lee 4 botones y envía eventos por
   Serial. La lógica del juego vive en la web (Node + navegador).
