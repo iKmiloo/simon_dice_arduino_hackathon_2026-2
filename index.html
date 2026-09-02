@@ -419,7 +419,7 @@
 
   function setConnected(connected) {
     statusDot.classList.toggle('on', connected);
-    statusText.textContent = connected ? 'arduino conectado' : 'arduino desconectado (usa el teclado)';
+    statusText.textContent = connected ? 'arduino conectado' : 'sin arduino — el mouse hace de circuito';
   }
 
   function sendLed(index, on) {
